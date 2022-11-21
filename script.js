@@ -1,15 +1,3 @@
-// const movieAPICallback = function (err,res,body){
-//     console.log('response is ',body);
-// }
-
-// const apiCallback = function (err,res,body){
-//     console.log('response is ',body);
-//     const director = body[0];
-//     request (`https://dhekumar.github.io/asynchronous-javascript/directors/${director.id}/movies.json`, {json:true}, movieAPICallback);
-// }
-
-// request ('https://dhekumar.github.io/asynchronous-javascript/directors.json', {json:true}, apiCallback);
-
 import fetch from "node-fetch";
 import request from "request";
 
@@ -29,8 +17,6 @@ function findPostsByUserId(userId,postsJsonArray){
 }
 
 async function findMostComments(posts){
-  console.log(posts);
-
   const postMap = new Map();
   for (var post in posts){
     postMap.set(posts[post],0);
@@ -58,18 +44,15 @@ async function findMostComments(posts){
   console.log("most commented post is postId",postId);
 }
 
-
-
 // E1A fetch most followed posts for user
-
-
-
 // callback
-// function callbackFindMostCommentedPost(id){
-
-// }
-
-
+function callbackFindMostCommentedPost(id){
+  request (`https://jsonplaceholder.typicode.com/posts`, {json:true}, function(err,res,body){
+    let posts = findPostsByUserId(id,body);
+    findMostComments(posts);
+  });
+}
+// callbackFindMostCommentedPost(1);
 
 // promise
 function promiseFindMostCommentedPost(id){
@@ -78,10 +61,8 @@ function promiseFindMostCommentedPost(id){
     .then((json) => objectify(json))
     .then((jsonArray)=> findPostsByUserId(id,jsonArray))
     .then((foundArray) => findMostComments(foundArray));
-  }
-
-
-
+}  
+// promiseFindMostCommentedPost(1);
 
 // async await
 async function asyncFindMostCommentedPost(id){
@@ -117,24 +98,74 @@ async function asyncFindMostCommentedPost(id){
   console.log("most commented post is postId",postId);
 
 }
-
-
-
+// asyncFindMostCommentedPost(1);
 
 // E1B find and print user with the most posts
-
-
-
 // callback
+function callbackFindUserWithMostPosts(){
+  request (`https://jsonplaceholder.typicode.com/posts`, {json:true}, function(err,res,body){
+    const allPosts = body;
+    let userIdArray = [];
+    let userPostMap = new Map();
 
+    for(var post in allPosts){
+      if (!userIdArray.includes(allPosts[post].userId)){
+        userIdArray.push(allPosts[post].userId);
+        userPostMap.set(allPosts[post].userId,0);
+      }
+      userPostMap.set(allPosts[post].userId,userPostMap.get(allPosts[post].userId)+1);
+    }
 
+    let maxPosts = 0;
+    let userId = 0;
+
+    for (var user in userIdArray){
+      
+      if (userPostMap.get(userIdArray[user]) > maxPosts){
+        maxPosts = userPostMap.get(userIdArray[user]);
+        userId = userIdArray[user];
+      }
+    }
+
+    console.log("user with most posts is", userId );
+  });
+}
+// callbackFindUserWithMostPosts();
 
 // promise
+function promiseFindUserWithMostPosts(){
+  fetch("https://jsonplaceholder.typicode.com/posts")
+  .then((response)=>response.json())
+  .then((json)=>{
+    const allPosts = json;
+    let userIdArray = [];
+    let userPostMap = new Map();
 
+    for(var post in allPosts){
+    if (!userIdArray.includes(allPosts[post].userId)){
+      userIdArray.push(allPosts[post].userId);
+      userPostMap.set(allPosts[post].userId,0);
+    }
+    userPostMap.set(allPosts[post].userId,userPostMap.get(allPosts[post].userId)+1);
+    }
 
+    let maxPosts = 0;
+    let userId = 0;
+
+    for (var user in userIdArray){
+    
+      if (userPostMap.get(userIdArray[user]) > maxPosts){
+        maxPosts = userPostMap.get(userIdArray[user]);
+        userId = userIdArray[user];
+      }
+    }
+    console.log("user with most posts is", userId );
+  });
+}
+// promiseFindUserWithMostPosts();
 
 // async await
-async function findUserWithMostPosts(){
+async function asyncFindUserWithMostPosts(){
   const allPosts = await (await fetch("https://jsonplaceholder.typicode.com/posts")).json();
   let userIdArray = [];
   let userPostMap = new Map();
@@ -158,16 +189,48 @@ async function findUserWithMostPosts(){
     }
   }
 
-  console.log("users with most posts is", userId );
+  console.log("user with most posts is", userId );
 }
-
-
-
-
+// asyncFindUserWithMostPosts();
 
 // E1C List all users with at least 1 open task
 // callback
+function callbackFindOpenTaskUsers(){
+  request (`https://jsonplaceholder.typicode.com/todos`, {json:true}, function(err,res,body){
+    const allTodos = body;
+    let userIdArray = [];
+
+    for (var todo in allTodos){
+      if (!allTodos[todo].completed && !userIdArray.includes(allTodos[todo].userId)){
+        userIdArray.push(allTodos[todo].userId);
+      }
+    }
+
+    console.log(userIdArray);
+  });
+}
+// callbackFindOpenTaskUsers();
+
 // promise
+function promiseFindOpenTaskUsers(){
+  fetch("https://jsonplaceholder.typicode.com/todos")
+  .then((response)=>response.json())
+  .then((json)=>{
+    const allTodos = json;
+
+    let userIdArray = [];
+
+    for (var todo in allTodos){
+      if (!allTodos[todo].completed && !userIdArray.includes(allTodos[todo].userId)){
+        userIdArray.push(allTodos[todo].userId);
+      }
+    }
+
+    console.log(userIdArray);
+  });
+}
+// promiseFindOpenTaskUsers();
+
 // async await
 async function asyncFindOpenTaskUsers(){
   const allTodos = await (await fetch("https://jsonplaceholder.typicode.com/todos")).json();
@@ -181,39 +244,29 @@ async function asyncFindOpenTaskUsers(){
 
   console.log(userIdArray);
 }
+// asyncFindOpenTaskUsers();
 
 // E2
 const userTodosPromise = new Promise((resolve, reject) => {
-  setTimeout(() => {
-      console.log('The second promise has rejected');
-      reject('Failed');
-  }, 2 * 1000);
-  // fetch('https://jsonplaceholder.typicode.com/')
-  // .then((response)=>response.json)});
-
+  fetch('https://jsonplaceholder.typicode.com/todos')
+  .then((response)=>response.json())
+  .then((json)=>resolve(json));
 });
 
 const userPostsPromise = new Promise((resolve, reject) => {
-  setTimeout(() => {
-      console.log('The second promise has rejected');
-      reject('Failed');
-  }, 2 * 1000);
-  // fetch('https://jsonplaceholder.typicode.com/')
-  // .then((response)=>response.json)});
-
+  fetch('https://jsonplaceholder.typicode.com/posts')
+  .then((response)=>response.json())
+  .then((json)=>resolve(json));
 });
 
 function fetchTodosAndPosts(userId){
-  Promise.all([prototypePromise1, prototypePromise2]).then((results) => {
-    console.log(results);
-    let filteredArray = results.filter(function (result) {
-      return result.userId === userId
-    });
-    console.log(filteredArray);
+  Promise.all([userPostsPromise, userTodosPromise]).then((results) => {
+    let filteredPostsArray = results[0].filter(result => result.userId === userId);
+    let filteredTodosArray = results[1].filter(result => result.userId === userId);
+    console.log(filteredPostsArray,filteredTodosArray);
   });
 }
-
-fetchTodosAndPosts();
+// fetchTodosAndPosts(1);
   
 // E3
 async function getBestMovieByKubrick(){
@@ -247,4 +300,5 @@ async function getBestMovieByKubrick(){
   }
   console.log("Best kubrick movie is:",title);
 }
+// getBestMovieByKubrick();
 
